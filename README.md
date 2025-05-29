@@ -3,16 +3,13 @@
 ## Структура проекта
 
 ```
-project/
-├── Vagrantfile              # Конфигурация Vagrant для создания VM
-├── provisioning/
-│   ├── playbook.yml         # Ansible playbook для настройки
-│   ├── roles/
-│   │   ├── common/          # Общие настройки (пользователи, пакеты)
-│   │   ├── docker/          # Установка Docker и Docker Compose
-│   │   └── clickhouse/      # Настройка ClickHouse и Grafana
-├── docker-compose.yml       # Docker Compose для ClickHouse и Grafana
-└── README.md                # Инструкции по развертыванию
+infrastructure/
+├── Vagrantfile          # Конфигурация всех виртуальных машин
+├── provisioning/       # Скрипты начальной настройки
+│   ├── common.sh       # Общие настройки для всех серверов
+│   ├── master.sh       # Настройки только для Master сервера
+│   └── users.sh        # Создание пользователей root и admin
+└── README.md           # Инструкции по развертыванию              # Инструкции по развертыванию
 ```
 
 # Otus

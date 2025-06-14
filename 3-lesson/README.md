@@ -15,7 +15,8 @@
 
 ## Шаг 1. Создание базы данных
 
-```sql
+```
+sql
 CREATE DATABASE auto_db;
 USE auto_db;
 ```

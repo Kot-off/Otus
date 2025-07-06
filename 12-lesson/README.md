@@ -39,9 +39,10 @@ GRANT otus TO anton;
 SELECT * FROM pg_user WHERE usename = 'anton';
 ```
 
-usename | usesysid | usecreatedb | usesuper | userepl | usebypassrls | passwd | valuntil | useconfig
----------+----------+-------------+----------+---------+--------------+----------+----------+-----------
-anton | 16384 | f | f | f | f | **\*\*\*\*** | |
+<details> <summary>Результат выполнения</summary>
+usename	usesysid	usecreatedb	usesuper	userepl	usebypassrls	passwd	valuntil	useconfig
+anton	16384	f	f	f	f	********	NULL	NULL
+</details>
 
 ### 5.2 Просмотр ролей
 
@@ -49,9 +50,10 @@ anton | 16384 | f | f | f | f | **\*\*\*\*** | |
 SELECT * FROM pg_roles WHERE rolname = 'otus';
 ```
 
-rolname | rolsuper | rolinherit | rolcreaterole | rolcreatedb | rolcanlogin | rolreplication | rolconnlimit | rolpassword | rolvaliduntil | rolbypassrls | rolconfig | oid  
----------+----------+------------+---------------+-------------+-------------+----------------+--------------+-------------+---------------+--------------+-----------+------
-otus | f | t | f | f | f | f | -1 | **\*\*\*\*** | | f | | 16385
+<details> <summary>Результат выполнения</summary>
+rolname	rolsuper	rolinherit	rolcreaterole	rolcreatedb	rolcanlogin	rolreplication	rolconnlimit	rolpassword	rolvaliduntil	rolbypassrls	rolconfig	oid
+otus	f	t	f	f	f	f	-1	NULL	NULL	f	NULL	16385
+</details>
 
 ### 5.3 Просмотр привилегий
 
@@ -61,9 +63,10 @@ WHERE grantee = 'otus' AND table_name = 'your_table_name';
 -- Замените your_table_name на имя таблицы, которой выдавали права
 ```
 
-grantor | grantee | table_catalog | table_schema | table_name | privilege_type | is_grantable | with_hierarchy
----------+---------+---------------+--------------+------------+----------------+--------------+----------------
-postgres| otus | my_database | public | employees | SELECT | NO | NO
+<details> <summary>Результат выполнения</summary>
+grantor	grantee	table_catalog	table_schema	table_name	privilege_type	is_grantable	with_hierarchy
+postgres	otus	my_database	public	employees	SELECT	NO	NO
+</details>
 
 ### Проверка назначения ролей
 
@@ -71,9 +74,10 @@ postgres| otus | my_database | public | employees | SELECT | NO | NO
 SELECT * FROM pg_auth_members WHERE roleid = (SELECT oid FROM pg_roles WHERE rolname = 'otus');
 ```
 
-roleid | member | grantor | admin_option
---------+--------+---------+--------------
-16385 | 16384 | 10 | f
+<details> <summary>Результат выполнения</summary>
+roleid	member	grantor	admin_option
+16385	16384	10	f
+</details>
 
 ## Результаты
 

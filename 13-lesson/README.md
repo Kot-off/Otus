@@ -1,33 +1,29 @@
-# 🚀 Полное руководство: ClickHouse + MinIO + clickhouse-backup
+---
+# ✅ Полное руководство: ClickHouse + MinIO + clickhouse-backup
 
-Это пошаговая инструкция по развёртыванию системы резервного копирования для ClickHouse с использованием MinIO в качестве хранилища и [clickhouse-backup](https://github.com/AlexAkulov/clickhouse-backup) — утилиты для создания и восстановления бэкапов.
+Пошаговая инструкция по развёртыванию системы резервного копирования ClickHouse с использованием MinIO и [clickhouse-backup](https://github.com/AlexAkulov/clickhouse-backup).
 
-Подходит для локальной разработки, тестирования, CI/CD и образовательных проектов.
-
+Подходит для локальной разработки, CI/CD и обучения.
 ---
 
-## 🧰 1. Подготовка структуры проекта
+## 🧰 1. Структура проекта
 
-Создаём структуру каталогов для конфигураций и хранения бэкапов.
+Создаём структуру:
 
 ```bash
 mkdir -p docker/{config/clickhouse-backup,scripts,backups}
 cd docker
 ```
 
-- `config/clickhouse-backup/` — конфиг `clickhouse-backup`
-- `backups/` — локальное хранилище резервных копий
-- `scripts/` — можно положить вспомогательные bash-скрипты
+- `config/clickhouse-backup/` — конфиг clickhouse-backup
+- `backups/` — локальное хранилище бэкапов
+- `scripts/` — вспомогательные скрипты
 
 ---
 
-## ⚙️ 2. Docker Compose: запуск всех сервисов
+## ⚙️ 2. Docker Compose
 
-Создаём `docker-compose.yml`, который поднимет 3 сервиса:
-
-- **ClickHouse** — аналитическая СУБД
-- **MinIO** — объектное хранилище, совместимое с Amazon S3
-- **clickhouse-backup** — утилита для создания, загрузки и восстановления бэкапов
+Создаём `docker-compose.yml`:
 
 ```yaml
 version: '3.8'
@@ -48,8 +44,8 @@ services:
   clickhouse:
     image: clickhouse/clickhouse-server:23.3-alpine
     ports:
-      - '8123:8123' # HTTP API
-      - '9000:9000' # Native protocol
+      - '8123:8123'
+      - '9000:9000'
     volumes:
       - clickhouse_data:/var/lib/clickhouse
     environment:
@@ -79,14 +75,14 @@ volumes:
 
 ---
 
-## 📝 3. Конфигурация clickhouse-backup
+## 📝 3. Конфигурация `clickhouse-backup`
 
-Создаём файл `config/clickhouse-backup/config.yml`, где указываем, куда сохранять бэкапы и как подключаться к ClickHouse и MinIO.
+Создаём `config/clickhouse-backup/config.yml`:
 
 ```yaml
 general:
   remote_storage: s3
-  backups_to_keep_remote: 2 # храним максимум 2 бэкапа на S3
+  backups_to_keep_remote: 2
 
 clickhouse:
   username: default
@@ -107,35 +103,28 @@ s3:
 
 ---
 
-## ▶️ 4. Запуск всех сервисов
+## ▶️ 4. Запуск
 
 ```bash
 docker-compose up -d
 ```
 
-- Все контейнеры запустятся в фоне.
-- Через несколько секунд ClickHouse будет доступен на порту `8123`, MinIO — на `9001`.
+- ClickHouse будет на `http://localhost:8123`
+- MinIO Web UI — `http://localhost:9001` (логин/пароль: `minioadmin`)
 
 ---
 
-## 🌐 5. Настройка хранилища MinIO
-
-Теперь нужно создать бакет (аналог S3-папки) в MinIO, куда будут загружаться бэкапы.
+## 🌐 5. Настройка MinIO
 
 ```bash
-# Настройка alias
 docker exec -it docker-minio-1 mc alias set local http://minio:9000 minioadmin minioadmin
-
-# Создание бакета
 docker exec -it docker-minio-1 mc mb local/clickhouse-backups
-
-# Делаем бакет публичным (опционально)
 docker exec -it docker-minio-1 mc anonymous set public local/clickhouse-backups
 ```
 
 ---
 
-## 🧪 6. Создание тестовой базы и таблицы
+## 🧪 6. Тестовые данные
 
 ```bash
 docker exec -it docker-clickhouse-1 clickhouse-client --query "CREATE DATABASE IF NOT EXISTS test"
@@ -143,96 +132,78 @@ docker exec -it docker-clickhouse-1 clickhouse-client --query "CREATE TABLE test
 docker exec -it docker-clickhouse-1 clickhouse-client --query "INSERT INTO test.data VALUES (1, 'Alice'), (2, 'Bob')"
 ```
 
-- Создаётся база `test` и таблица `data`.
-- Вставляются два тестовых значения.
-
 ---
 
 ## 💾 7. Создание резервной копии
 
 ```bash
-# Создаём локальный бэкап с уникальным именем
+# 1. Локальный бэкап (данные + схема)
 docker exec -it docker-clickhouse-backup-1 clickhouse-backup create backup_$(date +%Y%m%d_%H%M%S)
 
-# Загружаем бэкап в MinIO
+# 2. Загрузка в MinIO
 docker exec -it docker-clickhouse-backup-1 clickhouse-backup upload backup_*
 ```
 
+> ⚠️ Никаких `--with-data` — бэкап с данными создаётся по умолчанию.
+
 ---
 
-## 🔁 8. Восстановление данных из бэкапа
+## 🧹 8. Удаление ClickHouse + volume
 
-### ✅ Стандартное восстановление (из локального бэкапа):
+Чтобы эмулировать потерю данных и протестировать восстановление:
 
 ```bash
+# Остановить и удалить контейнеры
+docker-compose down
+
+# Удалить volume с данными
+docker volume rm docker_clickhouse_data
+
+# Запустить ClickHouse заново
+docker-compose up -d
+sleep 30  # Подождать запуска
+```
+
+---
+
+## ♻️ 9. Восстановление из MinIO
+
+```bash
+# 1. Скачиваем нужный бэкап из MinIO
+docker exec -it docker-clickhouse-backup-1 clickhouse-backup download backup_YYYYMMDD_HHMMSS
+
+# 2. Восстанавливаем
 docker exec -it docker-clickhouse-backup-1 clickhouse-backup restore backup_YYYYMMDD_HHMMSS
 ```
 
-### ❗ Ошибка восстановления: UUID / "directory already exists"
-
-Если таблица уже была удалена, но физические данные остались в volume:
-
-1. Остановите ClickHouse:
-
-   ```bash
-   docker-compose stop clickhouse
-   ```
-
-2. Удалите данные:
-
-   ```bash
-   docker volume rm docker_clickhouse_data
-   ```
-
-3. Перезапустите ClickHouse:
-
-   ```bash
-   docker-compose up -d clickhouse
-   sleep 30  # подождите запуска
-   ```
-
-4. Повторите восстановление.
-
-### 🛠 Восстановление отдельно схемы и данных:
-
-Иногда удобно восстановить только структуру таблиц (без данных), а затем отдельно подгрузить данные:
-
-```bash
-# Только структура таблиц
-docker exec -it docker-clickhouse-backup-1 clickhouse-backup restore --schema backup_*
-
-# Только данные
-docker exec -it docker-clickhouse-backup-1 clickhouse-backup restore --data backup_*
-```
+🎯 После этого база и таблица полностью восстановятся вместе с данными.
 
 ---
 
-## 🔍 9. Проверка и отладка
+## 🔍 10. Проверка
 
 ```bash
-# Просмотр доступных бэкапов
+# Список локальных и удалённых бэкапов
 docker exec -it docker-clickhouse-backup-1 clickhouse-backup list
 docker exec -it docker-clickhouse-backup-1 clickhouse-backup list remote
 
-# Проверка данных в таблице
+# Проверка данных
 docker exec -it docker-clickhouse-1 clickhouse-client --query "SELECT * FROM test.data"
 ```
 
 ---
 
-## 🛠 10. Полезные адреса и команды
+## 🛠 11. Полезные адреса и команды
 
-- **MinIO Web UI**: [http://localhost:9001](http://localhost:9001)
-  Логин: `minioadmin`, Пароль: `minioadmin`
-
+- **MinIO UI**: [http://localhost:9001](http://localhost:9001)
 - **ClickHouse HTTP API**: [http://localhost:8123](http://localhost:8123)
 
-### Логи контейнеров при ошибках:
+### Логи:
 
 ```bash
 docker logs docker-clickhouse-1
-docker logs docker-minio-1
 docker logs docker-clickhouse-backup-1
+docker logs docker-minio-1
 ```
 
 ---

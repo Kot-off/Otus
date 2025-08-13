@@ -166,7 +166,7 @@ SELECT * FROM system.errors WHERE name LIKE '%Kafka%';
 
 ---
 
-✅ Теперь у нас настроен полный пайплайн:
+Настроен полный пайплайн:
 Kafka → ClickHouse Kafka Engine → Materialized View → MergeTree.
 
 ```

@@ -31,6 +31,7 @@ airflow connections add 'pg' \
     --conn-login 'otus' \
     --conn-password 'otus_clickhouse' \
     --conn-host 'postgres' \
-    --conn-port '5432'     
+    --conn-port '5432'  \
+    --conn-schema 'airflow'   
 
 airflow scheduler & airflow webserver

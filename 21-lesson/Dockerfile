@@ -8,7 +8,7 @@ ENV AIRFLOW__CORE__DAGS_FOLDER=/usr/local/airflow/dags
 ENV AIRFLOW__CORE__PLUGINS_FOLDER=/usr/local/airflow/plugins
 
 ENV AIRFLOW__CORE__EXECUTOR=LocalExecutor
-ENV AIRFLOW__CORE__SQL_ALCHEMY_CONN="postgresql+psycopg2://otus:otus_diploma@postgres:5432/airflow"
+ENV AIRFLOW__CORE__SQL_ALCHEMY_CONN="postgresql+psycopg2://otus:otus_clickhouse@postgres:5432/airflow"
 
 ENV AIRFLOW__CORE__LOAD_EXAMPLES=False
 

@@ -17,8 +17,10 @@
 docker-compose up -d
 
 # Поднимаем структуру БД
-docker exec -it ch1 clickhouse-client --queries-file /otus-clickhouse/ch/init_db/01_rbac.sql
-docker exec -it ch1 clickhouse-client --queries-file /otus-clickhouse/ch/init_db/00_databases_and_tables.sql
+docker cp /otus-clickhouse/ch/init_db/01_rbac.sql ch1:/tmp/
+docker cp /otus-clickhouse/ch/init_db/00_databases_and_tables.sql ch1:/tmp/
+docker exec -i ch1 clickhouse-client --queries-file /tmp/01_rbac.sql
+docker exec -i ch1 clickhouse-client --queries-file /tmp/00_databases_and_tables.sql
 
 # Ставим суперсет
 docker exec -it superset superset fab create-admin \

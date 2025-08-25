@@ -157,7 +157,6 @@ CREATE TABLE airflow_metadata.dag_code on cluster otus
 ENGINE = PostgreSQL(airflow_pg, table='dag_code')
 ;
 
-
 -----------------------------------------
 -- схема ext
 -----------------------------------------
@@ -224,56 +223,7 @@ CREATE TABLE datamart.trips ON CLUSTER otus
 )
 ENGINE = ReplicatedMergeTree
 PRIMARY KEY (pickup_datetime, dropoff_datetime)
-TTL pickup_datetime + INTERVAL 1 MONTH TO DISK 's3_cold'
 ;
-
-INSERT INTO datamart.trips
-SELECT
-    trip_id,
-    pickup_datetime,
-    dropoff_datetime,
-    pickup_longitude,
-    pickup_latitude,
-    dropoff_longitude,
-    dropoff_latitude,
-    passenger_count,
-    trip_distance,
-    fare_amount,
-    extra,
-    tip_amount,
-    tolls_amount,
-    total_amount,
-    payment_type,
-    pickup_ntaname,
-    dropoff_ntaname
-FROM s3(
-    'https://datasets-documentation.s3.eu-west-3.amazonaws.com/nyc-taxi/trips_{0..2}.gz',
-    'TabSeparatedWithNames'
-);
-INSERT INTO datamart.trips
-SELECT
-    trip_id,
-    pickup_datetime + INTERVAL 10 YEAR,
-    dropoff_datetime,
-    pickup_longitude,
-    pickup_latitude,
-    dropoff_longitude,
-    dropoff_latitude,
-    passenger_count,
-    trip_distance,
-    fare_amount,
-    extra,
-    tip_amount,
-    tolls_amount,
-    total_amount,
-    payment_type,
-    pickup_ntaname,
-    dropoff_ntaname
-FROM s3(
-    'https://datasets-documentation.s3.eu-west-3.amazonaws.com/nyc-taxi/trips_{0..2}.gz',
-    'TabSeparatedWithNames'
-)
-limit 10e4;
 
 -----------------------------------------
 -- схема dashboard
@@ -293,6 +243,7 @@ and `timestamp` >= toDateTime(now() - {seconds:UInt32})
 GROUP BY t
 ORDER BY t WITH FILL STEP {rounding:UInt32}
 ;');
+
 insert into dashboard.kafka_monitoring
 values
 ('Overview', 'Average humidity', 'select toStartOfInterval(toDateTime(`timestamp`), INTERVAL {rounding:UInt32} SECOND)::INT AS t , avg(humidity)
@@ -301,4 +252,4 @@ where True
 and `timestamp` >= toDateTime(now() - {seconds:UInt32})
 GROUP BY t
 ORDER BY t WITH FILL STEP {rounding:UInt32}
-;')
+;');

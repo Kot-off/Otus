@@ -101,5 +101,5 @@ CREATE NAMED COLLECTION airflow_pg on cluster otus AS
     port = 5432,
     database = 'airflow',
     user = 'otus',
-    password = 'otus_diploma',
+    password = 'otus_clickhouse',
     schema='public';

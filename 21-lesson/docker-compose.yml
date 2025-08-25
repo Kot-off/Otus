@@ -91,18 +91,22 @@ services:
       - ch_replicated
     volumes:
       - ./airflow/dags:/usr/local/airflow/dags
+    environment:
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://otus:otus_clickhouse@postgres:5432/airflow
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
 
   minio:
     image: bitnami/minio
     container_name: minio
     hostname: minio
     ports:
-      - 127.0.0.1:10000:9000
-      - 127.0.0.1:10001:9001
+      - 10000:9000
+      - 10001:9001
     environment:
       - MINIO_ROOT_USER=minioadmin
       - MINIO_ROOT_PASSWORD=minioadminpassword
       - MINIO_DEFAULT_BUCKETS=clickhouse:public
+      - MINIO_API_REMOVE=localhost
     # volumes:
     #   - ./minio:/bitnami/minio/data
     networks:
